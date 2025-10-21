@@ -1,0 +1,18 @@
+# Development and Testing dependencies for Tongdy Sensor Project
+# Install with: pip install -r requirements-dev.txt
+
+# First install core dependencies
+-r requirements.txt
+
+# Testing framework
+pytest>=8.0.0
+pytest-mock>=3.15.0      # For mocking in tests
+pytest-cov>=4.0.0        # For code coverage reports
+pytest-timeout>=2.4.0    # For test timeouts
+pytest-xdist>=3.8.0      # For parallel test execution
+
+# Code coverage
+coverage>=7.0.0
+
+# Terminal colors (for better test output on Windows)
+colorama>=0.4.6

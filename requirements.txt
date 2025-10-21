@@ -1,0 +1,11 @@
+# Core dependencies for Tongdy Sensor Project
+# Python 3.8+ required
+
+# Modbus communication library
+minimalmodbus>=2.1.1
+
+# Serial port communication
+pyserial>=3.5
+
+# Optional: For environment variables
+python-dotenv>=1.0.0
