@@ -1,0 +1,28 @@
+## sudo nano /etc/systemd/system/tongdy.service
+
+[Unit]
+Description=Tongdy Sensor (Python) Autostart
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/tongdy_sensor_clone
+Environment="PYTHONUNBUFFERED=1"
+# ถ้าต้องตั้งโซนเวลา/Locale เพิ่มก็ทำได้ เช่น:
+# Environment="TZ=Asia/Bangkok"
+
+# เรียกใช้ python ของ venv
+ExecStart=/home/pi/tongdy_sensor_clone/.venv/bin/python /home/pi/tongdy_sensor_clone/main.py
+
+Restart=on-failure
+RestartSec=5
+
+# เก็บล็อกไว้ใน journalctl (ค่าเริ่มต้น)
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
