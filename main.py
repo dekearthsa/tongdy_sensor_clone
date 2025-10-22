@@ -7,7 +7,7 @@ import threading
 import requests
 # from datetime import datetime
 
-PATH_DB = "/Users/pcsishun/project_envalic/hlr_control_system/hlr_backend/hlr_db.db"
+PATH_DB = "/pi/hlr_db.db"
 CTRL_URL = "http://172.29.247.180" # /emergency_shutdown GET  # 405 
 # SESSION = requests.Session()
 # conn = sqlite3.connect(PATH_DB)
@@ -61,7 +61,7 @@ def update_state_cyclicloop(conn, loop_count:int):
     conn.commit()
 
 def handle_end_loop():
-    status = requests.get(CTRL_URL + '/stop')
+    status = requests.get(CTRL_URL + '/manual/stop')
     print(f"{status.status_code} END..")
 
 
@@ -137,6 +137,10 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
             # print("endtime_ms => ", endtime_ms, el["endtime"])
             cyc_loop = int(el['cyclic_loop_dur'])
             # print("cyc_loop => ", cyc_loop, int(el['cyclic_loop_dur']))
+            print("system_state => ", system_state)
+            print("cyc_loop => ",cyc_loop)
+            print("starttime => ",starttime)
+            print("endtime_ms => ",endtime_ms)
             if cyc_loop <= 0 and starttime  >= endtime_ms:
                 print("in condition cyc_loop = 0", cyc_loop)
                 handle_end_loop()
@@ -174,6 +178,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
             # print("scab_duration => ",scab_duration)
             # cyc_loop = int(setting['cyclic_loop'])
             # print("regen_fan_volt => ", regen_fan_volt)
+            print("idle_duration => ", idle_duration)
             if system_state == "regen_firsttime":
                 print("in condition regen_firsttime")
                 send_payload_control(conn,"regen", True, regen_fan_volt, regen_duration)

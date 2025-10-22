@@ -4,7 +4,17 @@ conn = sqlite3.connect(PATH_DB)
 
 cursor = conn.cursor()
 
-cursor.execute("""
-    DROP TABLE hlr_sensor_data
-    """)
+data =cursor.execute("""
+    SELECT * FROM state_hlr
+    """).fetchall()
 
+
+data2 =cursor.execute("""
+    SELECT * FROM setting_control
+    """).fetchall()
+
+print(data, "\n")
+
+
+
+print(data2)
