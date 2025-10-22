@@ -127,7 +127,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
             if  el['is_start'] == 0: 
                 # print("system off")
                 continue 
-
+            starttime =  int(time.time() * 1000)
             # row_id = el["id"]
             cyclic_name = el["cyclicName"]
             # print("cyclic_name => ", cyclic_name, el["cyclicName"])
@@ -137,7 +137,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
             # print("endtime_ms => ", endtime_ms, el["endtime"])
             cyc_loop = int(el['cyclic_loop_dur'])
             # print("cyc_loop => ", cyc_loop, int(el['cyclic_loop_dur']))
-            if cyc_loop <= 0:
+            if cyc_loop <= 0 and starttime  >= endtime_ms:
                 print("in condition cyc_loop = 0", cyc_loop)
                 handle_end_loop()
                 update_endtime_and_state(conn, 0,0, "end")
@@ -151,7 +151,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
                 print("error in get_setting_control")
                 print(f"[checking] {e}")
                 continue
-            starttime =  int(time.time() * 1000)
+            
             # ดึงค่าจาก setting_control
             regen_fan_volt = setting["regen_fan_volt"]
             # print("regen_fan_volt => ",regen_fan_volt)
