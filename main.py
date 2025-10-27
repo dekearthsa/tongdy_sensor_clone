@@ -7,7 +7,7 @@ import threading
 import requests
 # from datetime import datetime
 
-PATH_DB = "/pi/hlr_db.db"
+PATH_DB = "/home/pi/hlr_backend_control/hlr_db.db"
 CTRL_URL = "http://172.29.247.180" # /emergency_shutdown GET  # 405 
 # SESSION = requests.Session()
 # conn = sqlite3.connect(PATH_DB)
@@ -291,16 +291,8 @@ def main():
 
     while not set_queue.empty():
         data_sensor = set_queue.get()
-        # print("data_sensor => ", data_sensor)
         data = data_sensor['data']
         now_ms = int(time.time() * 1000) 
-        # print("data => ",data)
-        # print("start.... main")
-        # print("sensor_id => ", data['sensor_id'])
-        # print("co2 => ", data['co2'])
-        # print("temperature => ", data['temperature'])
-        # print("humidity => ", data['humidity'])
-        # print("sensor_type => ", data['sensor_type'])
         if data['sensor_id'] == 51:
             save_to_db(now_ms=now_ms,
                     sensor_id= data['sensor_id'],
