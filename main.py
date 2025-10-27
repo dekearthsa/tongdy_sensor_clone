@@ -269,12 +269,20 @@ def save_to_db(now_ms, sensor_id, co2, temp, humid, mode, sensor_type):
             conn.commit()
             print("Saved")
         else:
-            cur.execute("""
-                INSERT INTO hlr_sensor_data (datetime, sensor_id, co2, temperature, humidity, mode, sensor_type, cyclicName)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, (now_ms, sensor_id, co2, temp, humid, mode, sensor_type, cyclicName))
-            conn.commit()
-            print("Saved")
+            if el["systemType"] == "manaul":
+                cur.execute("""
+                    INSERT INTO hlr_sensor_data (datetime, sensor_id, co2, temperature, humidity, mode, sensor_type, cyclicName)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (now_ms, sensor_id, co2, temp, humid, mode, sensor_type, el["systemType"]))
+                conn.commit()
+                print("Saved")
+            else:
+                cur.execute("""
+                    INSERT INTO hlr_sensor_data (datetime, sensor_id, co2, temperature, humidity, mode, sensor_type, cyclicName)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (now_ms, sensor_id, co2, temp, humid, mode, sensor_type, cyclicName))
+                conn.commit()
+                print("Saved")
     except Exception as err:
         print(f"error when save in database {err}")
 
