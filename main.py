@@ -61,7 +61,7 @@ def update_state_cyclicloop(conn, loop_count:int):
     conn.commit()
 
 def handle_end_loop():
-    status = requests.get(CTRL_URL + '/manual/stop')
+    status = requests.get(CTRL_URL + '/stop')
     print(f"{status.status_code} END..")
 
 
@@ -75,8 +75,8 @@ def send_payload_control(conn,state, heater, fanvolt, duration_ms):
         "duration": duration_ms # int (milliseconds)
     }
 
-    print(CTRL_URL + "/auto")
-    print(f"debug send => {payload}")
+    # print(CTRL_URL + "/auto")
+    # print(f"debug send => {payload}")
 
     status = requests.post(
         CTRL_URL + "/auto",
@@ -84,11 +84,11 @@ def send_payload_control(conn,state, heater, fanvolt, duration_ms):
         timeout=3
     )
 
-    print("status code:", status.status_code)
-    print("response:", status.text)
+    # print("status code:", status.status_code)
+    # print("response:", status.text)
     # status = SESSION.post(CTRL_URL+"/auto", data=payload, headers=headers, timeout=3). abcDEF99
-    print("status => ",status.status_code)
-    print("status => ",status)
+    # print("status => ",status.status_code)
+    # print("status => ",status)
     if status.status_code == 405:
             for i in range(4):
                 if i < 5:
@@ -137,12 +137,12 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
             # print("endtime_ms => ", endtime_ms, el["endtime"])
             cyc_loop = int(el['cyclic_loop_dur'])
             # print("cyc_loop => ", cyc_loop, int(el['cyclic_loop_dur']))
-            print("system_state => ", system_state)
-            print("cyc_loop => ",cyc_loop)
-            print("starttime => ",starttime)
-            print("endtime_ms => ",endtime_ms)
+            # print("system_state => ", system_state)
+            # print("cyc_loop => ",cyc_loop)
+            # print("starttime => ",starttime)
+            # print("endtime_ms => ",endtime_ms)
             if cyc_loop <= 0 and starttime  >= endtime_ms:
-                print("in condition cyc_loop = 0", cyc_loop)
+                # print("in condition cyc_loop = 0", cyc_loop)
                 handle_end_loop()
                 update_endtime_and_state(conn, 0,0, "end")
                 update_state_active(conn)
@@ -178,7 +178,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
             # print("scab_duration => ",scab_duration)
             # cyc_loop = int(setting['cyclic_loop'])
             # print("regen_fan_volt => ", regen_fan_volt)
-            print("idle_duration => ", idle_duration)
+            # print("idle_duration => ", idle_duration)
             if system_state == "regen_firsttime":
                 print("in condition regen_firsttime")
                 send_payload_control(conn,"regen", True, regen_fan_volt, regen_duration)
@@ -192,7 +192,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
             if  starttime  >= endtime_ms and endtime_ms > 0:
                 
                 if system_state == "regen":
-                    print("in condition regen")
+                    # print("in condition regen")
                     send_payload_control(conn,"regen", True, regen_fan_volt, regen_duration)
                     # update_endtime_and_state(conn, row_id, now_ms + cool_duration, "COOLDOWN")
                     update_endtime_and_state(conn, 
@@ -202,7 +202,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
                     continue
 
                 if system_state == "cooldown":
-                    print("in condition cooldown")
+                    # print("in condition cooldown")
                     send_payload_control(conn,"cooldown", False, cool_fan_volt, cool_duration)
                     # update_endtime_and_state(conn, row_id, now_ms + idle_duration, "IDLE")
                     update_endtime_and_state(conn, 
@@ -212,7 +212,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
                     continue
 
                 elif system_state == "idle":
-                    print("in condition idle")
+                    # print("in condition idle")
                     send_payload_control(conn,"idle", False, 0, idle_duration)
                     # update_endtime_and_state(conn, row_id, now_ms + scab_duration, "SCRUB")
                     update_endtime_and_state(conn, 
@@ -222,7 +222,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
                     continue
 
                 elif system_state == "scrub":
-                    print("in condition scrub")
+                    # print("in condition scrub")
                     send_payload_control(conn,"scrub", False, scab_fan_volt, scab_duration)  
                     update_state_cyclicloop(conn, cyc_loop-1)
                     update_endtime_and_state(conn, starttime,starttime + (scab_duration* 60 * 1000), "regen")
@@ -257,13 +257,24 @@ def save_to_db(now_ms, sensor_id, co2, temp, humid, mode, sensor_type):
     try:
         conn = open_conn()
         cur = conn.cursor()
+        el = conn.execute("SELECT * FROM state_hlr").fetchone()
         # now_ms = int(time.time() * 1000) 
-        cur.execute("""
-            INSERT INTO hlr_sensor_data (datetime, sensor_id, co2, temperature, humidity, mode, sensor_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (now_ms, sensor_id, co2, temp, humid, mode, sensor_type))
-        conn.commit()
-        print("Saved")
+        cyclicName = "None"
+        if el['is_start'] == 1:
+            cyclicName = el["cyclicName"]
+            cur.execute("""
+                INSERT INTO hlr_sensor_data (datetime, sensor_id, co2, temperature, humidity, mode, sensor_type, cyclicName)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (now_ms, sensor_id, co2, temp, humid, mode, sensor_type, cyclicName))
+            conn.commit()
+            print("Saved")
+        else:
+            cur.execute("""
+                INSERT INTO hlr_sensor_data (datetime, sensor_id, co2, temperature, humidity, mode, sensor_type, cyclicName)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (now_ms, sensor_id, co2, temp, humid, mode, sensor_type, cyclicName))
+            conn.commit()
+            print("Saved")
     except Exception as err:
         print(f"error when save in database {err}")
 
@@ -279,7 +290,6 @@ def main():
     poller.stop()
 
     while not set_queue.empty():
-        
         data_sensor = set_queue.get()
         # print("data_sensor => ", data_sensor)
         data = data_sensor['data']
