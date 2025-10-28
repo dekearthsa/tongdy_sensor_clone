@@ -1,5 +1,5 @@
 import sqlite3
-PATH_DB = "/Users/pcsishun/project_envalic/hlr_control_system/hlr_backend/hlr_db.db"
+PATH_DB = "/home/pi/hlr_backend_control/hlr_db.db"
 conn = sqlite3.connect(PATH_DB)
 
 cursor = conn.cursor()
@@ -13,8 +13,21 @@ data2 =cursor.execute("""
     SELECT * FROM setting_control
     """).fetchall()
 
+#cursor.execute(""" DROP TABLE hlr_sensor_data  """)
+#conn.commit()
+#conn.close()
+data3 =cursor.execute("""    SELECT * FROM hlr_sensor_data LIMIT 10 """).fetchall()
+
+list_table = cursor.execute(""" PRAGMA table_info(hlr_sensor_data) """).fetchall()
+#columns = cursor.fetchall()
 print(data, "\n")
 
 
 
-print(data2)
+print(data2 ,"\n")
+
+
+print(data3, "\n")
+
+
+print(list_table)
