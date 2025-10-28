@@ -1,0 +1,9 @@
+[(0, 'id', 'INTEGER', 0, None, 1),
+(1, 'datetime', 'INTEGER', 0, None, 0), 
+(2, 'sensor_id', 'TEXT', 0, None, 0), 
+(3, 'co2', 'REAL', 0, None, 0), 
+(4, 'temperature', 'REAL', 0, None, 0),
+ (5, 'humidity', 'REAL', 0, None, 0), 
+ (6, 'mode', 'TEXT', 0, None, 0), 
+ (7, 'sensor_type', 'TEXT', 0, None, 0), 
+ (8, 'cyclicName', 'TEXT', 0, None, 0)]
