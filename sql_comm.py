@@ -13,13 +13,17 @@ data2 =cursor.execute("""
     SELECT * FROM setting_control
     """).fetchall()
 
+
+
 #cursor.execute(""" DROP TABLE hlr_sensor_data  """)
 #conn.commit()
 #conn.close()
-data3 =cursor.execute("""    SELECT * FROM hlr_sensor_data LIMIT 10 """).fetchall()
+data3 =cursor.execute("""   SELECT * FROM hlr_sensor_data LIMIT 10 """).fetchall()
 
 list_table = cursor.execute(""" PRAGMA table_info(hlr_sensor_data) """).fetchall()
 #columns = cursor.fetchall()
+
+list_table_db = cursor.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
 print(data, "\n")
 
 
