@@ -123,7 +123,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
     while not stop_event.is_set():
             # print("Thread running...")
             el = conn.execute("SELECT * FROM state_hlr").fetchone()
-            print("conn => ", el)
+            print("conn => ", el['systemState'])
             if  el['is_start'] == 0: 
                 # print("system off")
                 continue
