@@ -123,7 +123,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
     while not stop_event.is_set():
             # print("Thread running...")
             el = conn.execute("SELECT * FROM state_hlr").fetchone()
-            # print("conn => ", el['is_start'])
+            print("conn => ", el)
             if  el['is_start'] == 0: 
                 # print("system off")
                 continue
@@ -277,7 +277,7 @@ def save_to_db(now_ms, sensor_id, co2, temp, humid, mode, sensor_type):
             conn.commit()
             print("Saved")
         else:
-            if el["systemType"] == "manaul":
+            if el["systemType"] == "manual":
                 cur.execute("""
                     INSERT INTO hlr_sensor_data (datetime, sensor_id, co2, temperature, humidity, mode, sensor_type, cyclicName)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
