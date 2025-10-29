@@ -126,73 +126,62 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
             # print("conn => ", el['is_start'])
             if  el['is_start'] == 0: 
                 # print("system off")
-                continue 
-            starttime =  int(time.time() * 1000)
-            # row_id = el["id"]
-            cyclic_name = el["cyclicName"]
-            # print("cyclic_name => ", cyclic_name, el["cyclicName"])
-            system_state = el["systemState"]
-            # print("system_state => ", system_state, el["systemState"])
-            endtime_ms = el["endtime"] ## ms
-            # print("endtime_ms => ", endtime_ms, el["endtime"])
-            cyc_loop = int(el['cyclic_loop_dur'])
-            # print("cyc_loop => ", cyc_loop, int(el['cyclic_loop_dur']))
-            # print("system_state => ", system_state)
-            # print("cyc_loop => ",cyc_loop)
-            # print("starttime => ",starttime)
-            # print("endtime_ms => ",endtime_ms)
-            if cyc_loop <= 0 and starttime  >= endtime_ms:
-                # print("in condition cyc_loop = 0", cyc_loop)
-                handle_end_loop()
-                update_endtime_and_state(conn, 0,0, "end")
-                update_state_active(conn)
                 continue
-            
-            try:
-                setting = get_setting_control(conn, cyclic_name)
-                # print("setting => ",setting)
-            except Exception as e:
-                print("error in get_setting_control")
-                print(f"[checking] {e}")
-                continue
-            
-            # ดึงค่าจาก setting_control
-            regen_fan_volt = setting["regen_fan_volt"]
-            # print("regen_fan_volt => ",regen_fan_volt)
-            # regen_duration = int(setting["regen_duration"] * 60 * 1000) # ms
-            regen_duration = int(setting["regen_duration"]) # min
-            # print("regen_duration => ",regen_duration)
-            # regen_duration = int(setting["regen_duration"]* 60 * 1000)
-            cool_fan_volt = setting["cool_fan"]
-            # print("cool_fan_volt => ",cool_fan_volt)
-            # cool_duration = int(setting["cool_duration"]* 60 * 1000) # ms
-            cool_duration = int(setting["cool_duration"])  # min
-            # print("cool_duration => ",cool_duration)
-            # idle_duration = int(setting["idle_duration"] * 60* 1000) # ms
-            idle_duration = int(setting["idle_duration"]) # min
-            # print("idle_duration => ",idle_duration)
-            scab_fan_volt = setting["scab_fan_volt"]
-            # print("scab_fan_volt => ",scab_fan_volt)
-            # scab_duration = int(setting["scab_duration"]* 60 * 1000) # ms
-            scab_duration = int(setting["scab_duration"] ) # min
-            # print("scab_duration => ",scab_duration)
-            # cyc_loop = int(setting['cyclic_loop'])
-            # print("regen_fan_volt => ", regen_fan_volt)
-            # print("idle_duration => ", idle_duration)
-            if system_state == "regen_firsttime":
-                print("in condition regen_firsttime")
-                send_payload_control(conn,"regen", True, regen_fan_volt, regen_duration)
-                # update_endtime_and_state(conn, row_id, now_ms + cool_duration, "COOLDOWN")
-                update_endtime_and_state(conn, 
-                                        starttime,
-                                        starttime + (regen_duration * 60 *1000) , 
-                                        "cooldown") 
-                continue
-
-            if  starttime  >= endtime_ms and endtime_ms > 0:
+            else:
+                starttime =  int(time.time() * 1000)
+                # row_id = el["id"]
+                cyclic_name = el["cyclicName"]
+                # print("cyclic_name => ", cyclic_name, el["cyclicName"])
+                system_state = el["systemState"]
+                # print("system_state => ", system_state, el["systemState"])
+                endtime_ms = el["endtime"] ## ms
+                # print("endtime_ms => ", endtime_ms, el["endtime"])
+                cyc_loop = int(el['cyclic_loop_dur'])
+                # print("cyc_loop => ", cyc_loop, int(el['cyclic_loop_dur']))
+                # print("system_state => ", system_state)
+                # print("cyc_loop => ",cyc_loop)
+                # print("starttime => ",starttime)
+                # print("endtime_ms => ",endtime_ms)
+                if cyc_loop <= 0 and starttime  >= endtime_ms:
+                    # print("in condition cyc_loop = 0", cyc_loop)
+                    handle_end_loop()
+                    update_endtime_and_state(conn, 0,0, "end")
+                    update_state_active(conn)
+                    continue
                 
-                if system_state == "regen":
-                    # print("in condition regen")
+                try:
+                    setting = get_setting_control(conn, cyclic_name)
+                    # print("setting => ",setting)
+                except Exception as e:
+                    print("error in get_setting_control")
+                    print(f"[checking] {e}")
+                    continue
+                
+                # ดึงค่าจาก setting_control
+                regen_fan_volt = setting["regen_fan_volt"]
+                # print("regen_fan_volt => ",regen_fan_volt)
+                # regen_duration = int(setting["regen_duration"] * 60 * 1000) # ms
+                regen_duration = int(setting["regen_duration"]) # min
+                # print("regen_duration => ",regen_duration)
+                # regen_duration = int(setting["regen_duration"]* 60 * 1000)
+                cool_fan_volt = setting["cool_fan"]
+                # print("cool_fan_volt => ",cool_fan_volt)
+                # cool_duration = int(setting["cool_duration"]* 60 * 1000) # ms
+                cool_duration = int(setting["cool_duration"])  # min
+                # print("cool_duration => ",cool_duration)
+                # idle_duration = int(setting["idle_duration"] * 60* 1000) # ms
+                idle_duration = int(setting["idle_duration"]) # min
+                # print("idle_duration => ",idle_duration)
+                scab_fan_volt = setting["scab_fan_volt"]
+                # print("scab_fan_volt => ",scab_fan_volt)
+                # scab_duration = int(setting["scab_duration"]* 60 * 1000) # ms
+                scab_duration = int(setting["scab_duration"] ) # min
+                # print("scab_duration => ",scab_duration)
+                # cyc_loop = int(setting['cyclic_loop'])
+                # print("regen_fan_volt => ", regen_fan_volt)
+                # print("idle_duration => ", idle_duration)
+                if system_state == "regen_firsttime":
+                    print("in condition regen_firsttime")
                     send_payload_control(conn,"regen", True, regen_fan_volt, regen_duration)
                     # update_endtime_and_state(conn, row_id, now_ms + cool_duration, "COOLDOWN")
                     update_endtime_and_state(conn, 
@@ -201,46 +190,58 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
                                             "cooldown") 
                     continue
 
-                if system_state == "cooldown":
-                    # print("in condition cooldown")
-                    send_payload_control(conn,"cooldown", False, cool_fan_volt, cool_duration)
-                    # update_endtime_and_state(conn, row_id, now_ms + idle_duration, "IDLE")
-                    update_endtime_and_state(conn, 
-                                             starttime, 
-                                             starttime + (cool_duration * 60 *1000) ,
-                                             "idle")
-                    continue
+                if  starttime  >= endtime_ms and endtime_ms > 0:
+                    
+                    if system_state == "regen":
+                        # print("in condition regen")
+                        send_payload_control(conn,"regen", True, regen_fan_volt, regen_duration)
+                        # update_endtime_and_state(conn, row_id, now_ms + cool_duration, "COOLDOWN")
+                        update_endtime_and_state(conn, 
+                                                starttime,
+                                                starttime + (regen_duration * 60 *1000) , 
+                                                "cooldown") 
+                        continue
 
-                elif system_state == "idle":
-                    # print("in condition idle")
-                    send_payload_control(conn,"idle", False, 0, idle_duration)
-                    # update_endtime_and_state(conn, row_id, now_ms + scab_duration, "SCRUB")
-                    update_endtime_and_state(conn, 
-                                             starttime, 
-                                             starttime + (idle_duration * 60 *1000) ,
-                                             "scrub")
-                    continue
+                    if system_state == "cooldown":
+                        # print("in condition cooldown")
+                        send_payload_control(conn,"cooldown", False, cool_fan_volt, cool_duration)
+                        # update_endtime_and_state(conn, row_id, now_ms + idle_duration, "IDLE")
+                        update_endtime_and_state(conn, 
+                                                starttime, 
+                                                starttime + (cool_duration * 60 *1000) ,
+                                                "idle")
+                        continue
 
-                elif system_state == "scrub":
-                    # print("in condition scrub")
-                    send_payload_control(conn,"scrub", False, scab_fan_volt, scab_duration)  
-                    update_state_cyclicloop(conn, cyc_loop-1)
-                    update_endtime_and_state(conn, starttime,starttime + (scab_duration* 60 * 1000), "regen")
-                    # if cyc_loop <= 0:
-                    #     print("in condition cyc_loop = 0", cyc_loop)
-                    #     update_endtime_and_state(conn, 0,0, "end")
-                    #     update_state_active(conn)
-                    #     continue
-                    # else: 
-                    #     print("in else cyc_loop ", cyc_loop)
-                    #     update_endtime_and_state(conn, 
-                    #                              starttime,
-                    #                              starttime + (scab_duration* 60 * 1000), 
-                    #                              "regen")
-                    #     continue 
+                    elif system_state == "idle":
+                        # print("in condition idle")
+                        send_payload_control(conn,"idle", False, 0, idle_duration)
+                        # update_endtime_and_state(conn, row_id, now_ms + scab_duration, "SCRUB")
+                        update_endtime_and_state(conn, 
+                                                starttime, 
+                                                starttime + (idle_duration * 60 *1000) ,
+                                                "scrub")
+                        continue
+
+                    elif system_state == "scrub":
+                        # print("in condition scrub")
+                        send_payload_control(conn,"scrub", False, scab_fan_volt, scab_duration)  
+                        update_state_cyclicloop(conn, cyc_loop-1)
+                        update_endtime_and_state(conn, starttime,starttime + (scab_duration* 60 * 1000), "regen")
+                        # if cyc_loop <= 0:
+                        #     print("in condition cyc_loop = 0", cyc_loop)
+                        #     update_endtime_and_state(conn, 0,0, "end")
+                        #     update_state_active(conn)
+                        #     continue
+                        # else: 
+                        #     print("in else cyc_loop ", cyc_loop)
+                        #     update_endtime_and_state(conn, 
+                        #                              starttime,
+                        #                              starttime + (scab_duration* 60 * 1000), 
+                        #                              "regen")
+                        #     continue 
 
 
-            stop_event.wait(sleep_sec)
+                stop_event.wait(sleep_sec)
     # except Exception as e:
     #     print(f"[checking_loop] fatal: {e}")
     # finally:
