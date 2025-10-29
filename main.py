@@ -121,11 +121,11 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
     conn = open_conn()
     # try:
     while not stop_event.is_set():
-            # print("Thread running...")
             el = conn.execute("SELECT * FROM state_hlr").fetchone()
             # print("conn => ", el['systemState'])
             if  el['is_start'] == 0: 
                 # print("system off")
+                # time.sleep(2)
                 continue
             else:
                 starttime =  int(time.time() * 1000)
@@ -242,6 +242,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
 
 
                 stop_event.wait(sleep_sec)
+            time.sleep(2)
     # except Exception as e:
     #     print(f"[checking_loop] fatal: {e}")
     # finally:
@@ -326,7 +327,6 @@ def main():
                     mode="test", 
                     sensor_type= "tongdy")
         # print("\n")
-    
     time.sleep(5)
 
 
