@@ -15,13 +15,15 @@ CTRL_URL = "http://172.29.247.180" # /emergency_shutdown GET  # 405
 
 ## connect db 
 def open_conn():
-    conn = sqlite3.connect(PATH_DB, check_same_thread=False)
+    conn = sqlite3.connect(PATH_DB, check_same_thread=False, timeout=5)
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA busy_timeout = 5000;")  # รอ lock สูงสุด 5s
     except Exception:
         pass
     return conn
+
 
 ## curd db ## 
 def get_setting_control(conn, cyclic_name: str):
@@ -66,53 +68,34 @@ def handle_end_loop():
 
 
 ## send function auto
-def send_payload_control(conn,state, heater, fanvolt, duration_ms):
-    print("start send payload...")
+SESSION = requests.Session()
+
+def send_payload_control(conn, state, heater, fanvolt, duration_min):
     payload = {
-        "phase": state,        # string: "REGEN", "COOLDOWN", "IDLE", "SCRUB"
-        "fan_volt": fanvolt,   # float
-        "heater": heater,      # bool
-        "duration": duration_ms # int (milliseconds)
+        "phase": state,
+        "fan_volt": fanvolt,
+        "heater": heater,
+        "duration": duration_min  # หน่วยให้ชัดเจนว่าเป็น "นาที"
     }
 
-    # print(CTRL_URL + "/auto")
-    # print(f"debug send => {payload}")
+    for attempt in range(5):
+        try:
+            r = SESSION.post(CTRL_URL + "/auto", json=payload, timeout=3)
+            if r.status_code == 200:
+                return True
+            time.sleep(1)
+        except requests.RequestException as e:
+            print(f"[control] attempt {attempt+1}/5: {e}")
+            time.sleep(1)
 
-    status = requests.post(
-        CTRL_URL + "/auto",
-        json=payload,      
-        timeout=3
-    )
-
-    # print("status code:", status.status_code)
-    # print("response:", status.text)
-    # status = SESSION.post(CTRL_URL+"/auto", data=payload, headers=headers, timeout=3). abcDEF99
-    # print("status => ",status.status_code)
-    # print("status => ",status)
-    if status.status_code == 405:
-            for i in range(4):
-                if i < 5:
-                    print(f"try to send command {i+1}/5")
-                    status = requests.post(
-                        CTRL_URL + "/auto",
-                        json=payload,      
-                        timeout=3
-                    )
-                    if status.status_code == 200:
-                        break
-                    else:
-                        time.sleep(1)
-                else:
-                    print("Force stop emergency shutdown")
-                    update_endtime_and_state(conn, 0,0, "end")
-                    update_state_active(conn)
-                    status = requests.get(CTRL_URL+"/emergency_shutdown",timeout=3)
-                    print(status)
-                    break
-                    
-
-    # except Exception as e:
-    #     print(f"[control] error: {e}")
+    # ล้มเหลวครบ 5 ครั้ง → ปรับ state และสั่ง emergency
+    update_endtime_and_state(conn, 0, 0, "end")
+    update_state_active(conn)
+    try:
+        SESSION.get(CTRL_URL + "/emergency_shutdown", timeout=3)
+    except requests.RequestException as e:
+        print(f"[control] emergency failed: {e}")
+    return False
 
 
 ### Checking loop thread
@@ -121,6 +104,7 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
     conn = open_conn()
     # try:
     while not stop_event.is_set():
+        try:
             el = conn.execute("SELECT * FROM state_hlr").fetchone()
             # print("conn => ", el['systemState'])
             if  el['is_start'] == 0: 
@@ -243,31 +227,35 @@ def checking_state_loop(stop_event: threading.Event, sleep_sec: float = 1.0):
 
                 stop_event.wait(sleep_sec)
             time.sleep(2)
-    # except Exception as e:
-    #     print(f"[checking_loop] fatal: {e}")
+        except Exception as e:
+            print(f"[checking_loop] fatal: {e}")
     # finally:
     #     conn.close()
 
 def start_checking_thread():
     print("Starting thread....")
     stop_event = threading.Event()
-    t = threading.Thread(target=checking_state_loop, args=(stop_event,), daemon=True)
-    t.start()
-    return stop_event, t
+
+    def supervisor():
+        while not stop_event.is_set():
+            t = threading.Thread(target=checking_state_loop, args=(stop_event,), daemon=True)
+            t.start()
+            t.join()  # ถ้าหลุดด้วย exception จะกลับมาที่นี่
+            # เธรดตาย → รอแป๊บแล้วสตาร์ตใหม่
+            if not stop_event.is_set():
+                print("[watchdog] checking thread crashed, restarting in 2s")
+                stop_event.wait(2)
+
+    supervisor_thread = threading.Thread(target=supervisor, daemon=True)
+    supervisor_thread.start()
+    return stop_event, supervisor_thread
+
 
 def save_to_db(now_ms, sensor_id, co2, temp, humid, mode, sensor_type):
     try:
         conn = open_conn()
         cur = conn.cursor()
         el = conn.execute("SELECT * FROM state_hlr").fetchone()
-        # print("el => ", el)
-        # print("now_ms => ", now_ms)
-        # print("co2 => ", co2)
-        # print("temp => ", temp)
-        # print("humid => ", humid)
-        # print("mode => ", mode)
-        # print("sensor_type => ", sensor_type)
-        # now_ms = int(time.time() * 1000) 
         cyclicName = "None"
         if el['is_start'] == 1:
             cyclicName = el["cyclicName"]
@@ -326,7 +314,6 @@ def main():
                     humid= data['humidity'], 
                     mode="test", 
                     sensor_type= "tongdy")
-        # print("\n")
     time.sleep(5)
 
 
